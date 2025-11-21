@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla 2 - Display</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body data-pantalla="2">
+    <div class="pantalla-container">
+        <img id="main-image" src="" alt="Imagen principal">
+
+        <!-- Información de la imagen (opcional) -->
+        <div id="image-info"></div>
+
+        <!-- Indicador de pantalla -->
+        <div class="pantalla-indicator">Pantalla 2</div>
+
+        <!-- Estado de carga -->
+        <div class="loading" id="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando imágenes...</p>
+        </div>
+    </div>
+
+    <script type="module" src="pantalla-manager.js"></script>
+
+    <script>
+        // Ocultar loading cuando se cargue la primera imagen
+        const img = document.getElementById('main-image');
+        img.addEventListener('load', () => {
+            document.getElementById('loading-state').style.display = 'none';
+        });
+    </script>
+</body>
+
+</html>
