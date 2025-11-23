@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Administrador de Imágenes</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 2.5em;
+      }
+
+      .stats {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      .stat-card {
+        flex: 1;
+        min-width: 200px;
+        padding: 20px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+      }
+
+      .stat-card h3 {
+        font-size: 2em;
+        margin-bottom: 5px;
+      }
+
+      .stat-card p {
+        opacity: 0.9;
+      }
+
+      .images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .image-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        position: relative;
+      }
+
+      .image-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .image-card.hidden {
+        opacity: 0.6;
+        border: 3px solid #ff6b6b;
+      }
+
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 75%; /* 4:3 Aspect Ratio */
+        background: #f0f0f0;
+        overflow: hidden;
+      }
+
+      .image-wrapper img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .hidden-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ff6b6b;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+        z-index: 10;
+        display: none;
+      }
+
+      .image-card.hidden .hidden-badge {
+        display: block;
+      }
+
+      .image-info {
+        padding: 15px;
+      }
+
+      .image-info h3 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+      }
+
+      .info-row {
+        margin: 5px 0;
+        color: #666;
+        font-size: 0.9em;
+      }
+
+      .info-row strong {
+        color: #333;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+        font-size: 0.9em;
+      }
+
+      .btn-toggle {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-toggle:hover {
+        background: #5568d3;
+      }
+
+      .btn-toggle.show {
+        background: #51cf66;
+      }
+
+      .btn-toggle.show:hover {
+        background: #40c057;
+      }
+
+      .btn-delete {
+        background: #ff6b6b;
+        color: white;
+      }
+
+      .btn-delete:hover {
+        background: #ff5252;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 50px;
+        color: #667eea;
+        font-size: 1.5em;
+      }
+
+      .filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .filter-btn {
+        padding: 10px 20px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+      }
+
+      .filter-btn.active {
+        background: #667eea;
+        color: white;
+      }
+
+      .filter-btn:hover {
+        transform: scale(1.05);
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 1.8em;
+        }
+
+        .images-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📸 Administrador de Imágenes</h1>
+
+      <div class="stats">
+        <div class="stat-card">
+          <h3 id="total-images">0</h3>
+          <p>Total de Imágenes</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="visible-images">0</h3>
+          <p>Imágenes Visibles</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="hidden-images">0</h3>
+          <p>Imágenes Ocultas</p>
+        </div>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">Todas</button>
+        <button class="filter-btn" data-filter="visible">Visibles</button>
+        <button class="filter-btn" data-filter="hidden">Ocultas</button>
+      </div>
+
+      <div class="loading" id="loading">Cargando imágenes...</div>
+      <div class="images-grid" id="images-container"></div>
+    </div>
+
+    <script type="module">
+      import {
+        getFirestore,
+        collection,
+        onSnapshot,
+        query,
+        orderBy,
+        doc,
+        updateDoc,
+        deleteDoc,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBUeEMpxpzZ864HVU8OU69uQ6HH1LYX0dA",
+        authDomain: "imagen-ia-845a3.firebaseapp.com",
+        projectId: "imagen-ia-845a3",
+        storageBucket: "imagen-ia-845a3.firebasestorage.app",
+        messagingSenderId: "134868092813",
+        appId: "1:134868092813:web:ac1c73912979df59a25fc4",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      let imagenes = [];
+      let currentFilter = "all";
+
+      // Escuchar cambios en la base de datos
+      const q = query(
+        collection(db, "datosPantallasBank"),
+        orderBy("fecha_creacion", "asc")
+      );
+
+      onSnapshot(q, (snapshot) => {
+        imagenes = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.img_url) {
+            imagenes.push({
+              id: doc.id,
+              url: data.img_url,
+              nombre: data.nombre || "Sin nombre",
+              frase: data.frase || "Sin frase",
+              ciudad: data.ciudad || "Sin ciudad",
+              fecha: data.fecha || "Sin fecha",
+              oculto: data.oculto || false,
+            });
+          }
+        });
+
+        updateStats();
+        renderImages();
+        document.getElementById("loading").style.display = "none";
+      });
+
+      function updateStats() {
+        const total = imagenes.length;
+        const hidden = imagenes.filter((img) => img.oculto).length;
+        const visible = total - hidden;
+
+        document.getElementById("total-images").textContent = total;
+        document.getElementById("visible-images").textContent = visible;
+        document.getElementById("hidden-images").textContent = hidden;
+      }
+
+      function renderImages() {
+        const container = document.getElementById("images-container");
+        container.innerHTML = "";
+
+        const filteredImages = imagenes.filter((img) => {
+          if (currentFilter === "all") return true;
+          if (currentFilter === "visible") return !img.oculto;
+          if (currentFilter === "hidden") return img.oculto;
+          return true;
+        });
+
+        filteredImages.forEach((imagen) => {
+          const card = document.createElement("div");
+          card.className = `image-card ${imagen.oculto ? "hidden" : ""}`;
+          card.innerHTML = `
+            <div class="hidden-badge">OCULTO</div>
+            <div class="image-wrapper">
+              <img src="${imagen.url}" alt="${imagen.nombre}" />
+            </div>
+            <div class="image-info">
+              <h3>${imagen.nombre}</h3>
+              <div class="info-row"><strong>Ciudad:</strong> ${imagen.ciudad}</div>
+              <div class="info-row"><strong>Fecha:</strong> ${imagen.fecha}</div>
+              <div class="info-row"><strong>Frase:</strong> ${imagen.frase}</div>
+              <div class="actions">
+                <button class="btn btn-toggle ${
+                  imagen.oculto ? "show" : ""
+                }" onclick="toggleVisibility('${imagen.id}', ${imagen.oculto})">
+                  ${imagen.oculto ? "Mostrar" : "Ocultar"}
+                </button>
+                <button class="btn btn-delete" onclick="deleteImage('${
+                  imagen.id
+                }', '${imagen.nombre}')">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      // Función para alternar visibilidad
+      window.toggleVisibility = async function (id, currentState) {
+        try {
+          const imageRef = doc(db, "datosPantallasBank", id);
+          await updateDoc(imageRef, {
+            oculto: !currentState,
+          });
+          console.log(`Imagen ${id} ${!currentState ? "ocultada" : "mostrada"}`);
+        } catch (error) {
+          console.error("Error al actualizar visibilidad:", error);
+          alert("Error al actualizar la imagen. Intenta de nuevo.");
+        }
+      };
+
+      // Función para eliminar imagen
+      window.deleteImage = async function (id, nombre) {
+        if (
+          confirm(
+            `¿Estás seguro de que deseas eliminar la imagen "${nombre}"?\n\nEsta acción no se puede deshacer.`
+          )
+        ) {
+          try {
+            await deleteDoc(doc(db, "datosPantallasBank", id));
+            console.log(`Imagen ${id} eliminada`);
+          } catch (error) {
+            console.error("Error al eliminar imagen:", error);
+            alert("Error al eliminar la imagen. Intenta de nuevo.");
+          }
+        }
+      };
+
+      // Filtros
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".filter-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentFilter = btn.dataset.filter;
+          renderImages();
+        });
+      });
+    </script>
+  </body>
+</html>

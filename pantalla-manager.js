@@ -29,7 +29,8 @@ class PantallaManager {
       this.imagenes = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.img_url) {
+        // Solo agregar imágenes que tengan URL y no estén ocultas
+        if (data.img_url && !data.oculto) {
           this.imagenes.push({
             id: doc.id,
             url: data.img_url,
